@@ -1,5 +1,6 @@
-//Helper function to get length of an array
+//Helper functions to get length of an array
 const _getLength = (array) => array.length;
+const _sorterSlice = (array) => array.sort((a, b) => b.count - a.count).slice(0, 5)
 
 function getTotalBooksCount(books) {
   //Helper function to get length of an books
@@ -18,7 +19,7 @@ function getBooksBorrowedCount(books) {
      .filter(eachBorrow => eachBorrow.returned === false)
       //If the arrays length is grater than 1,                               
      .length > 0);
-  return isNotBorrowed.length;
+  return _getLength(isNotBorrowed);
 }
 
 function getMostCommonGenres(books) {
@@ -46,41 +47,44 @@ function getMostCommonGenres(books) {
 
 function getMostPopularBooks(books) {
   //Map function returns an array
-  return books
+  let output = books
   .map((book) => {
     //For each book, return an object with book title and length of borrows
    return { name: book.title, count: book.borrows.length };
   })
-  //Sorts from largest to smallest
-  .sort((bookA, bookB) => (bookA.count < bookB.count ? 1 : -1))
-  //Slice returns first 5
-  .slice(0, 5);
+  //Helper function
+  return _sorterSlice(output)
 }
 
+function sorter(objects){
+  return Object.entries(objects).sort((a,b) => b[1]-a[1])
+}
 
 function getMostPopularAuthors(books, authors) {
-  let output = [];
-  authors.forEach((author) => {
-    //For each author, create an author object
-    let eachAuthor = {
-      //Fill author object with authors full name
-    name: `${author.name.first} ${author.name.last}`,
-    count: 0
-    };
-    
-    books.forEach((book) => {
-      //For each book, check if the books author id matches the authors id
-    if (book.authorId === author.id) {
-      //if it does, add the the amount of borrows for that book to the count of created object
-      eachAuthor.count += book.borrows.length;
+  // we are going to use reduce to get an array of objects that have 
+  const authorList = books.reduce((acc, book) => { 
+    // destruct authorId and Borrows from book
+    const { authorId, borrows } = book; 
+    const authorObj = authors.find(author => author.id === authorId);
+    //authors first/last name
+    const name = `${authorObj.name.first} ${authorObj.name.last}`; 
+    const count = borrows.length;  
+    // see if we already have an entry for this author in the accumulator
+    const authExists = acc.find(auth => auth.name === name);
+    if(authExists) {
+      authExists.count += count;
+    } else {
+      const newAuthEntry = {
+        name,
+        count
+      };
+      acc.push(newAuthEntry);
     }
-    });
-    //Add the eachAuthor objects to the array
-    output.push(eachAuthor);
-  });
-  //Sort the array of author objects sorted by their count
-  return output.sort((a, b) => b.count - a.count).slice(0, 5);
+    return acc;
+  }, []);
+  return _sorterSlice(authorList)
 }
+
 
 module.exports = {
   getTotalBooksCount,
